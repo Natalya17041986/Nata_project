@@ -121,3 +121,5 @@ print(round(melb_data[(melb_data['Price']<1e6) & ((melb_data['Rooms']>5) | (melb
 
 # в каком районе Мельбурна продаются виллы и котеджи
 print(melb_data[(melb_data['Type'] == 'h') & (melb_data['Price'] < 3000000)]['Regionname'].mode())
+
+

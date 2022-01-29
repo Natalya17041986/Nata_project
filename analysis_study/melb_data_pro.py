@@ -187,3 +187,71 @@ melb_df['SellerG'] = melb_df['SellerG'].apply(lambda x: x if x in popular_seler 
 a = melb_df[melb_df['SellerG'] == 'Nelson']['Price'].min() 
 b = melb_df[melb_df['SellerG'] == 'other']['Price'].min() 
 print(round(a/b, 1))
+
+#Давайте определим число уникальных категорий в каждом столбце нашей таблицы melb_df. 
+# Для этого создадим вспомогательную таблицу unique_counts:
+# создаём пустой список
+unique_list = []
+# пробегаемся по именам столбцов в таблице
+for col in melb_df.columns:
+    # создаём кортеж (имя столбца, число уникальных значений)
+    item = (col, melb_df[col].nunique(),melb_df[col].dtype) 
+    # добавляем кортеж в список
+    unique_list.append(item) 
+# создаём вспомогательную таблицу и сортируем её
+unique_counts = pd.DataFrame(
+    unique_list,
+    columns=['Column_Name', 'Num_Unique', 'Type']
+).sort_values(by='Num_Unique',  ignore_index=True)
+# выводим её на экран
+print(unique_counts)
+
+# инормация о памяти, занимаемой текущей таблицей
+print(melb_df.info())
+
+# Сделаем преобразование столбцов к типу данных category:
+cols_to_exclude = ['Date', 'Rooms', 'Bedroom', 'Bathroom', 'Car'] # список столбцов, которые мы не берём во внимание
+max_unique_count = 150 # задаём максимальное число уникальных категорий
+for col in melb_df.columns: # цикл по именам столбцов
+    if melb_df[col].nunique() < max_unique_count and col not in cols_to_exclude: # проверяем условие
+        melb_df[col] = melb_df[col].astype('category') # преобразуем тип столбца
+print(melb_df.info())
+
+# с помощью атрибута этого аксессора categories мы можем получить список уникальных категорий в столбце Regionname:
+print(melb_df['Regionname'].cat.categories)
+
+#А теперь посмотрим, каким образом столбец кодируется в виде чисел в памяти компьютера. 
+# Для этого можно воспользоваться атрибутом codes:
+print(melb_df['Regionname'].cat.codes)
+
+#переименуем категории признака типа постройки Type — заменим их на полные названия 
+# (напомним, u — unit, h — house, t — townhouse).
+melb_df['Type'] = melb_df['Type'].cat.rename_categories({
+    'u': 'unit',
+    't': 'townhouse',
+    'h': 'house'
+})
+print(melb_df['Type'])
+
+# А теперь представим ситуацию, что появилась новая партия домов и теперь мы продаём и квартиры (flat). 
+# Создадим объект Series new_houses_types, в котором будем хранить типы зданий новой партии домов. 
+# Преобразуем тип new_houses_types в такой же тип, как и у столбца Type в таблице melb_data, и выведем результат на экран:
+new_houses_types = pd.Series(['unit', 'house', 'flat', 'flat', 'house'])
+new_houses_types = new_houses_types.astype(melb_df['Type'].dtype)
+print(new_houses_types)
+
+# Решить эту проблему на самом деле не сложно. Можно добавить категорию flat в столбец Type 
+# с помощью метода акссесора cat add_categories(), в который достаточно просто передать имя новой категории:
+melb_df['Type'] = melb_df['Type'].cat.add_categories('flat')
+new_houses_types = pd.Series(['unit', 'house', 'flat', 'flat', 'house'])
+new_houses_types = new_houses_types.astype(melb_df['Type'].dtype)
+print(new_houses_types)
+
+#При преобразовании столбцов таблицы о недвижимости к типу category мы оставили без внимания столбец Suburb (пригород). 
+# Давайте исправим это. С помощью метода info() узнайте, сколько памяти занимает таблица melb_df. 
+# Преобразуйте признак Suburb следующим образом: оставьте в столбце только 119 наиболее популярных пригородов, 
+# остальные замените на 'other'. Приведите данные в столбце Suburb к категориальному типу.
+popular_suburb = melb_df['Suburb'].value_counts().nlargest(119)
+melb_df['Suburb'] = melb_df['Suburb'].apply(lambda x: x if x in popular_suburb else 'other')
+melb_df['Suburb'] = melb_df['Suburb'].astype('category')
+melb_df.info()
