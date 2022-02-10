@@ -125,7 +125,6 @@ grouped_cases.plot(
     bins=10
 )
 
-plt.show()
 
 # Давайте построим столбчатую диаграмму, которая покажет ТОП-10 стран по суммарной заболеваемости.
 # Для этого сгруппируем данные по странам и вычислим последний зафиксированный показатель 
@@ -141,7 +140,6 @@ grouped_country.plot(
     figsize=(12, 4),
     colormap='plasma'
 )
-plt.show()
 
 # А теперь посмотрим, как в этих десяти странах соотносится количество заболевших и умерших от вируса. 
 # Для этого отобразим сразу два показателя на столбчатой диаграмме: 
@@ -153,10 +151,10 @@ grouped_country.plot(
     grid=True, 
     figsize=(12, 4), 
 )
-plt.show()
+
 
 covid_df.groupby(['country'])['total_vaccinations'].last().nsmallest(5).plot(kind='bar')
-plt.show()
+
 
 import matplotlib.pyplot as plt
 
@@ -191,7 +189,7 @@ axes.scatter(
     marker='o',
     c = 'blue'
 )
-plt.show()
+
 
 # Построим круговую диаграмму, чтобы отобразить ТОП-10 комбинаций вакцин в мире.
 # ТОП-10 комбинаций вакцин (vaccines) по распространённости мы находим с помощью метода value_counts(). 
@@ -209,7 +207,7 @@ axes.pie(
     explode = [0.1, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 )
 
-plt.show()
+
 
 # Обратите внимание, что диаграмма показывает соотношение только для десяти популярных комбинаций вакцин,
 # а не для всех вакцин в совокупности, что является не совсем корректным для круговой диаграммы, 
@@ -286,7 +284,7 @@ axes.pie(
     autopct='%.1f%%',
 )
 
-plt.show()
+
 
 # Например, изобразим на одном графике, как росла общая заболеваемость (confirmed), 
 # число зафиксированных смертей (deaths), выздоровевших пациентов (recovered) и активных случаев (active) 
@@ -320,7 +318,7 @@ axes.xaxis.set_tick_params(rotation=30)
 axes.grid()
 axes.legend()
 
-plt.show()
+
 
 # При использовании библиотеки Matplotlib вовсе не обязательно ограничиваться одной системой координат.
 # Вы можете размещать несколько систем координат на одной фигуре, что позволит нам 
@@ -353,7 +351,6 @@ insert_axes.bar(x = vacc_country_per_hundred.index, height = vacc_country_per_hu
 insert_axes.set_ylabel('На 100 человек')
 insert_axes.xaxis.set_tick_params(rotation=45)
 
-plt.show()
 
 # Примечание. Первые два числовых параметра, указанные при создании систем координат, 
 # — это отступ снизу и слева, следующие два — ширина и высота относительно ширины и высоты всего пространства 
@@ -361,7 +358,7 @@ plt.show()
 
 # следующий код создаст шесть координатных плоскостей, сведённых в таблицу размера 2x3:
 
-
+fig, axes = plt.subplots(nrows=2, ncols=3, figsize=(10, 5))
 
 # Теперь, обладая знаниями о методе subplots(), построим три графика:
 # Столбчатую диаграмму, которая покажет динамику ежедневной вакцинации в России.
@@ -405,4 +402,326 @@ axes[2].hist(
 axes[2].set_title("Гистограмма заболеваемости в России")
 axes[2].xaxis.set_tick_params(rotation=30)
 
-plt.show()
+## SEABORN
+# В данном разделе мы будем сравнивать несколько стран: Россию, Австралию, Германию, Канаду и Великобританию. 
+# Создадим специальный DataFrame croped_covid_df для этих данных.
+# Для фильтрации по списку значений используем метод isin(), который проверяет, есть ли запись в столбце 
+# в переданном в метод списке. В результате возвращается привычная нам маска.
+# А теперь снова немного магии Feature Engineering, чтобы показатели по странам стали сопоставимыми: 
+# добавим информацию о населении стран, чтобы рассчитать ежедневную заболеваемость на 100 человек — 
+# заболеваемость в процентах от общего количества населения (daily_confirmed_per_hundred).
+
+import seaborn as sns
+
+countries = ['Russia', 'Australia', 'Germany', 'Canada', 'United Kingdom']
+croped_covid_df = covid_df[covid_df['country'].isin(countries)]
+
+populations = pd.DataFrame([
+    ['Canada', 37664517],
+    ['Germany', 83721496],
+    ['Russia', 145975300],
+    ['Australia', 25726900],
+    ['United Kingdom', 67802690]
+    ],
+    columns=['country', 'population']
+)
+croped_covid_df = croped_covid_df.merge(populations, on=['country'])
+croped_covid_df['daily_confirmed_per_hundred'] = croped_covid_df['daily_confirmed'] / croped_covid_df['population'] * 100
+croped_covid_df.head()
+
+# Построим сразу две гистограммы: одна будет иллюстрировать общее распределение ежедневной заболеваемости 
+# (daily_confirmed), а вторая — то же распределение в разрезе стран. 
+# Для этого создаём две координатные плоскости с помощью метода subplots(). 
+# На первой координатной плоскости рисуем простую гистограмму с 25 столбцами, 
+# а также добавим на неё сглаживающую кривую. 
+# На второй гистограмме добавляем параметр названия страны по оси y. В таком случае количество наблюдений 
+# будет обозначаться на диаграмме яркостью цвета (чем темнее полоса, тем больше наблюдений находится в
+# интервале).
+
+fig, axes = plt.subplots(nrows=2, ncols=1, figsize=(10, 8))
+sns.histplot(
+    data=croped_covid_df,
+    x='daily_confirmed_per_hundred',
+    bins=25,
+    kde=True,
+    ax=axes[0]
+)
+axes[0].set_title('Гистограмма ежедневной заболеваемости на 100 человек', fontsize=16)
+sns.histplot(
+    data=croped_covid_df,
+    x='daily_confirmed_per_hundred',
+    y='country',
+    bins=25,
+    color='red',
+    ax=axes[1]
+)
+
+# Рассмотрим пример — построим коробчатые диаграммы признака летальности (death_rate), 
+# который вы создавали ранее в задании 3.3.
+# Коробчатые диаграммы в Seaborn строятся с помощью метода boxplot().
+# Ящики отразим горизонтально (для этого по оси x отложим признак летальности, а по оси y — страны), 
+# параметр orient отвечает за ориентацию диаграммы, а width — за ширину коробок:
+
+fig = plt.figure(figsize=(10, 7))
+boxplot = sns.boxplot(
+    data=croped_covid_df,
+    y='country',
+    x='death_rate',
+    orient='h',
+    width=0.9
+)
+boxplot.set_title('Распределение летальности по странам')
+boxplot.set_xlabel('Летальность')
+boxplot.set_ylabel('Страна')
+boxplot.grid()
+
+# Теперь рассмотрим пример многоуровневой столбчатой диаграммы. С помощью неё мы можем, например, посмотреть 
+# на средний ежедневный процент заболевших в странах по кварталам.
+# Для построения столбчатых диаграмм в Seaborn используется метод barplot(). 
+# По умолчанию метод отображает среднее по столбцу, который указан в параметре x 
+# (вместо среднего можно вычислить и любую другую статистическую характеристику, наименование 
+# оторой задаётся в параметре estimator). Для добавления многоуровневости используется 
+# араметр hue, который позволяет группировать данные по признаку:
+
+fig = plt.figure(figsize=(10, 7))
+croped_covid_df['quarter'] = croped_covid_df['date'].dt.quarter
+barplot = sns.barplot(
+    data=croped_covid_df,
+    x='country',
+    y='daily_confirmed_per_hundred',
+    hue='quarter',
+)
+barplot.set_title('Средний процент болеющего населения по кварталам')
+
+# Построим один из самых любимых дата-сайентистами графиков — jointplot() — 
+# в котором совмещены диаграмма рассеяния и гистограмма. Это довольно удобный и полезный инструмент, 
+# когда мы хотим одновременно посмотреть и на распределения переменных, и сразу оценить их взаимосвязь.
+# Построим jointplot зависимости ежедневной заболеваемости в странах от общей численности населения 
+# в процентах (daily_confirmed_per_hundred) от числа полностью вакцинированных в процентах 
+# (people_fully_vaccinated_per_hundred).
+# Параметры xlim и ylim определяют диапазон отображения осей x и y. Параметр height отвечает за высоту 
+# и ширину графика (он квадратный).
+
+jointplot = sns.jointplot(
+    data=croped_covid_df, 
+    x='people_fully_vaccinated_per_hundred', 
+    y='daily_confirmed_per_hundred',
+    hue='country',
+    xlim = (0, 40),
+    ylim = (0, 0.1),
+    height=8,
+)
+
+# Допустим, мы хотим сравнить темпы вакцинации по странам во времени. Вы, скорее всего, сразу подумали 
+# о линейном графике. Но давайте мыслить шире. Когда мы хотим сравнить скорость изменения показателей 
+# по малому количеству категорий (в данном случае — по странам, а их у нас их всего пять), нагляднее всего 
+# будет тепловая карта.
+# Предварительно создадим сводную таблицу: по столбцам отложим признак даты, а по строкам — страны. 
+# В ячейках таблицы будет находиться процент вакцинированных (первым компонентом) людей в стране на 
+# определённую дату. Чтобы даты отображались на тепловой карте верно, их необходимо привести к типу string.
+
+pivot = croped_covid_df.pivot_table(
+    values='people_vaccinated_per_hundred',
+    columns='date',
+    index='country',
+)
+pivot.columns = pivot.columns.astype('string')
+print(pivot)
+
+# Для построения тепловой карты в Seaborn используется метод heatmap(). Данный метод работает с 
+# табличными данными и визуализирует все ячейки таблицы с помощью цвета. Параметр annot отвечает за 
+# отображение легенды (аннотации), параметр cmap — за цветовую гамму графика.
+
+heatmap = sns.heatmap(data=pivot, cmap='YlGnBu')
+heatmap.set_title('Тепловая карта вакцинации', fontsize=16);
+
+# Создайте новый признак confirmed_per_hundred, который покажет процентное отношение заболевших вирусом к 
+# общему числу населения в странах (confirmed / population * 100).
+# Постройте тепловую карту, которая покажет, как росло число заболевших в процентах от общего
+# числа населения (confirmed_per_hundred) в странах из таблицы croped_covid_df.
+# Выберите верные выводы по построенному графику:
+
+croped_covid_df['confirmed_per_hundred'] = croped_covid_df['confirmed']/croped_covid_df['population'] * 100
+pivot = croped_covid_df.pivot_table(
+    values='confirmed_per_hundred',
+    columns='date',
+    index='country'
+)
+pivot.columns = pivot.columns.astype('string')
+fig = plt.figure(figsize=(10, 5))
+
+heatmap = sns.heatmap(data=pivot, cmap='plasma')
+heatmap.set_title('Тепловая карта заболеваемости', fontsize=16)
+
+# Постройте коробчатую диаграмму для признака recover_rate (отношение выздоровлений к числу 
+# зафиксированных случаев заболевания в процентах).
+# Выберите верные выводы по данному графику:
+
+fig = plt.figure(figsize=(10, 7))
+boxplot = sns.boxplot(
+    data=croped_covid_df,
+    x='country',
+    y='recover_rate',
+    orient='v',
+    width=0.9
+)
+
+# PLOTLY
+
+import plotly
+import plotly.express as px
+
+# Дальнейшая работа будет вестись с таблицей covid_df — полными данными о статистике 
+# распространения вируса Covid-19, а также о вакцинации в разных странах.
+
+# Построим график роста зафиксированного числа случаев заражения (confirmed), смертей (deaths), 
+# выздоровлений (recovered) и активных случаев (active) за всё время. Для этого просуммируем статистику 
+# по дням и передадим полученный DataFrame в метод line().
+# Для отображения созданной методом line() фигуры используется метод fig.show():
+
+line_data = covid_df.groupby('date', as_index=False).sum()
+fig = px.line(
+    data_frame=line_data, #DataFrame
+    x='date', #ось абсцисс
+    y=['confirmed', 'recovered', 'deaths', 'active'], #ось ординат
+    height=500, #высота
+    width=1000, #ширина
+    title='Confirmed, Recovered, Deaths, Active cases over Time' #заголовок
+)
+
+# Давайте рассмотрим ещё один пример — построим столбчатую диаграмму, показывающую ТОП-10 стран 
+# по среднему проценту выздоравливающих пациентов (recover_rate). Для этого используем метод bar() 
+# модуля express. 
+
+#считаем средний процент выздоровлений для каждой страны
+bar_data = covid_df.groupby(
+    by='country',
+    as_index=False
+)[['recover_rate']].mean().round(2).nlargest(10, columns=['recover_rate'])
+
+#строим график
+fig = px.bar(
+    data_frame=bar_data, #датафрейм
+    x="country", #ось x
+    y="recover_rate", #ось y
+    color='country', #расцветка в зависимости от страны
+    text = 'recover_rate', #текст на столбцах
+    orientation='v', #ориентация графика
+    height=500, #высота
+    width=1000, #ширина
+    title='Top 10 Countries for Recovery Rate' #заголовок
+)
+
+#отображаем его
+
+# В полученных данных вы можете увидеть «страну» Diamond Princess. Напомним, что это круизный лайнер,
+# на котором в начале февраля 2020 года выявили заражённого Covid-19, после чего все пассажиры 
+# оказались изолированы на судне из-за карантинных мер. Последние пассажиры сошли на берег лишь 1 марта. 
+
+
+#  Построим иерархическую диаграмму для среднего ежедневного показателя выздоровевших пациентов 
+# (daily_recovered) во всех странах.
+
+#считаем среднее ежедневно фиксируемое количество выздоровевших по странам
+treemap_data = covid_df.groupby(
+    by='country',
+    as_index=False
+)[['daily_recovered']].mean()
+
+#строим график
+fig = px.treemap(
+    data_frame=treemap_data, #DataFrame
+    path=['country'], #категориальный признак, для которого строится график
+    values='daily_recovered', #параметр, который сравнивается
+    height=500, #высота
+    width=1000, #ширина
+    title='Daily Recovered Cases by Country' #заголовок
+)
+
+#отображаем график
+
+
+# Итак, построим фоновую картограмму, которая покажет распространение (confirmed) 
+# коронавируса в мире во времени. 
+# Предварительно для правильного отображения на анимационном бегунке даты в таблице covid_df 
+# необходимо перевести обратно в строковый тип данных.
+
+#преобразуем даты в строковый формат
+choropleth_data = covid_df.sort_values(by='date')
+choropleth_data['date'] = choropleth_data['date'].astype('string')
+
+#строим график
+fig = px.choropleth(
+    data_frame=choropleth_data, #DataFrame
+    locations="country", #столбец с локациями
+    locationmode = "country names", #режим сопоставления локаций с базой Plotly
+    color="confirmed", #от чего зависит цвет
+    animation_frame="date", #анимационный бегунок
+    range_color=[0, 30e6], #диапазон цвета
+    title='Global Spread of COVID-19', #заголовок
+    width=800, #ширина
+    height=500, #высота
+    color_continuous_scale='Reds' #палитра цветов
+)
+
+#отображаем график
+
+# Построим 3D-диаграмму рассеяния, которая покажет, как число ежедневно обнаруживаемых случаев и число 
+# ежедневных смертей влияют на желание людей вакцинироваться. Для того чтобы нам было проще 
+# рассматривать диаграмму (точки будут более сгруппированными), построим её в логарифмическом масштабе 
+# по осям абсцисс и ординат.
+
+# Чтобы не перегрузить график, будем строить зависимость только в нескольких странах: США, России, 
+# Великобритании, Бразилии и Франции. Наблюдения для каждой страны окрасим разными цветами.
+
+#фильтруем таблицу по странам
+countries=['United States', 'Russia', 'United Kingdom', 'Brazil', 'France']
+scatter_data = covid_df[covid_df['country'].isin(countries)]
+
+#строим график
+fig = px.scatter_3d(
+    data_frame=scatter_data, #DataFrame
+    x = 'daily_confirmed', #ось абсцисс
+    y = 'daily_deaths', #ось ординат
+    z = 'daily_vaccinations', #ось аппликат
+    color='country', #расцветка в зависимости от страны
+    log_x=True, 
+    log_y=True,
+    width=1000,
+    height=700
+)
+
+#отображаем график
+
+# сохранение графика: fig.write_html("plotly/scatter_3d.html")
+
+
+# Постройте линейный график, который отображает, как изменялось ежедневное количество вакцинированных 
+# (daily_vaccinations) в мире во времени. Из графика найдите, чему равно количество вакцинированных 
+# (в миллионах) 28 февраля 2021 года (2021-02-28). Ответ округлите до целого числа.
+
+
+line_data = covid_df.groupby('date', as_index=False)['daily_vaccinations'].sum()
+fig = px.line(data_frame=line_data, x = 'date', y='daily_vaccinations')
+
+
+# Постройте анимированную тепловую картограмму для числа поставленных вакцин во всём мире (total_vaccinations).
+# На полученной карте найдите, чему равно количество вакцинированных в Японии (Japan) на 
+# 24 марта 2021 года (2021-03-24). Ответ приведите в тысячах (без нулей) и округлите до целого числа.
+# Примечание. Если в jupyter notebook в VS Code не запускается анимация тепловой карты, 
+# попробуйте отобразить график командой fig.show(renderer='notebook').
+
+choropleth_data = covid_df.sort_values(by='date')
+choropleth_data['date'] = choropleth_data['date'].astype('string')
+fig = px.choropleth(
+    data_frame=choropleth_data, #DataFrame
+    locations="country", #столбец с локациями
+    locationmode = "country names", #режим сопоставления локаций с базой Plotly
+    color="total_vaccinations", #от чего зависит цвет
+    hover_name="country", #группирующая переменная
+    animation_frame="date", #анимационный бегунок
+    color_continuous_scale='Reds', #палитра цветов
+    range_color=[0, 600e6] #диапазон цвета
+)
+
+fig.show()

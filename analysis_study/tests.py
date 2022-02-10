@@ -9,3 +9,11 @@ countries_df = pd.DataFrame({
 })
 countries_df['density'] = countries_df['population'] / countries_df['square'] * 1e6
 print(round(countries_df['density'].mean(), 2))
+
+
+import seaborn as sns
+print(sns.__version__)
+
+import plotly
+import plotly.express as px
+print(plotly.__version__)
