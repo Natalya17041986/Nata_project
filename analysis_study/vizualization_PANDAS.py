@@ -402,6 +402,8 @@ axes[2].hist(
 axes[2].set_title("Гистограмма заболеваемости в России")
 axes[2].xaxis.set_tick_params(rotation=30)
 
+plt.show()
+
 ## SEABORN
 # В данном разделе мы будем сравнивать несколько стран: Россию, Австралию, Германию, Канаду и Великобританию. 
 # Создадим специальный DataFrame croped_covid_df для этих данных.
@@ -725,3 +727,4 @@ fig = px.choropleth(
 )
 
 fig.show()
+
