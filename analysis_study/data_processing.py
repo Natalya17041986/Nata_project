@@ -6,7 +6,7 @@ import seaborn as sns
 import plotly.express as px
 
 sber_data = pd.read_csv('data/sber_data.csv')
-print(sber_data.head())
+rint(sber_data.head())
 print(sber_data.tail())
 print(sber_data.shape)
 print(sber_data ['sub_area'].nunique())
