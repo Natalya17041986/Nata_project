@@ -705,7 +705,7 @@ heart_2 = r_scaler.fit_transform(heart[['age','sex','cp','trestbps', 'chol', 'fb
                                       'slope','ca','thal','target','old','trestbps_mean','cp_1', 
                                       'cp_2', 'cp_3', 'cp_4', 'restecg_1', 'restecg_2', 'restecg_3',
                                       'slope_1', 'slope_2', 'slope_3', 'ca_1', 'ca_2','ca_3','ca_4', 'ca_5',
-                                     'thal_1','thal_2','thal_3','thal_4']]) # окпируем исходный дата сет
+                                     'thal_1','thal_2','thal_3','thal_4']]) # копируем исходный дата сет
 heart_2 = pd.DataFrame(heart_2, columns = [['age','sex','cp','trestbps', 'chol', 'fbs','restecg','thalach','exang','oldpeak',
                                       'slope','ca','thal','target','old','trestbps_mean','cp_1', 
                                       'cp_2', 'cp_3', 'cp_4', 'restecg_1', 'restecg_2', 'restecg_3',
